@@ -1,13 +1,748 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Hello, World!</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-<!-- LIVESCORE WIDGET SOCCERSAPI.COM -->
-<div id="ls-widget" data-w="w_default" class="livescore-widget"></div>
-<script type="text/javascript" src="https://ls.soccersapi.com/widget/res/w_default/widget.js"></script>
-<!-- LIVESCORE WIDGET SOCCERSAPI.COM -->
-  </body>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FootballCentral - Live Scores & Results</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(46, 125, 50, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(76, 175, 80, 0.3) 0%, transparent 50%),
+                linear-gradient(135deg, #1b5e20 0%, #2e7d32 25%, #388e3c 50%, #43a047 75%, #4caf50 100%);
+            min-height: 100vh;
+            color: #fff;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Football field pattern overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 98px,
+                    rgba(255, 255, 255, 0.03) 100px
+                ),
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 98px,
+                    rgba(255, 255, 255, 0.03) 100px
+                );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(20px);
+            border-bottom: 2px solid rgba(76, 175, 80, 0.3);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(45deg, #4caf50, #8bc34a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-main {
+            font-size: 1.8rem;
+            background: linear-gradient(45deg, #fff, #c8e6c9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-sub {
+            font-size: 0.7rem;
+            color: #a5d6a7;
+            font-weight: 400;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .nav-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            background: linear-gradient(45deg, #4caf50, #66bb6a);
+            color: white;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .control-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(76, 175, 80, 0.5);
+            background: linear-gradient(45deg, #66bb6a, #81c784);
+        }
+
+        .control-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-section {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem 0;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, #fff, #c8e6c9, #81c784);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            text-shadow: none;
+            line-height: 1.1;
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0.5rem;
+            font-weight: 300;
+        }
+
+        .hero-tagline {
+            font-size: 1rem;
+            color: #81c784;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .main-widget {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            padding: 2.5rem;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            margin-bottom: 3rem;
+            border: 1px solid rgba(76, 175, 80, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .main-widget:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 30px 80px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .widget-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .widget-title i {
+            color: #4caf50;
+            text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+
+        .live-badge {
+            background: linear-gradient(45deg, #f44336, #ff5722);
+            color: white;
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            animation: pulse 2s infinite;
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        #ls-widget {
+            padding: 0 !important;
+            margin: 0 !important;
+            border-radius: 15px;
+            overflow: hidden;
+            min-height: 500px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 300px;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(76, 175, 80, 0.3);
+            border-top: 4px solid #4caf50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .stats-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(15px);
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            border: 1px solid rgba(76, 175, 80, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(76, 175, 80, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .stat-card:hover::before {
+            left: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            border-color: rgba(76, 175, 80, 0.5);
+        }
+
+        .stat-icon {
+            font-size: 3rem;
+            background: linear-gradient(45deg, #4caf50, #8bc34a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #81c784;
+            font-size: 1rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            border-top: 2px solid rgba(76, 175, 80, 0.3);
+            margin-top: 3rem;
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .footer-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4caf50;
+            margin-bottom: 1rem;
+        }
+
+        .footer-text {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+        }
+
+        /* Dark theme adjustments */
+        body.dark-theme {
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(21, 32, 43, 0.8) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(30, 39, 46, 0.8) 0%, transparent 50%),
+                linear-gradient(135deg, #0f1419 0%, #1e2328 25%, #2d3748 50%, #4a5568 75%, #718096 100%);
+        }
+
+        body.dark-theme .main-widget,
+        body.dark-theme .stat-card {
+            background: rgba(26, 32, 46, 0.8);
+            border-color: rgba(74, 85, 104, 0.3);
+        }
+
+        /* Responsive design */
+        @media (max-width: 1024px) {
+            .container {
+                padding: 1.5rem;
+            }
+            
+            .hero-title {
+                font-size: 2.8rem;
+            }
+            
+            .stats-section {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 1.5rem;
+            }
+            
+            .logo {
+                font-size: 1.5rem;
+            }
+            
+            .hero-title {
+                font-size: 2.2rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .main-widget {
+                padding: 1.5rem;
+            }
+            
+            .widget-header {
+                flex-direction: column;
+                gap: 1rem;
+                text-align: center;
+            }
+            
+            .stats-section {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .stat-card {
+                padding: 1.5rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            .hero-title {
+                font-size: 1.8rem;
+            }
+            
+            .main-widget {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-futbol"></i>
+                </div>
+                <div class="logo-text">
+                    <span class="logo-main">FootballCentral</span>
+                    <span class="logo-sub">Live Football Hub</span>
+                </div>
+            </div>
+            <div class="nav-controls">
+                <button class="control-btn" onclick="refreshScores()">
+                    <i class="fas fa-sync-alt"></i>
+                    Refresh
+                </button>
+                <button class="control-btn" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i>
+                    <span id="theme-text">Dark</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="hero-section">
+            <h1 class="hero-title">FootballCentral</h1>
+            <p class="hero-subtitle">Your Ultimate Football Experience</p>
+            <p class="hero-tagline">Live Scores • Match Results • Real-time Updates</p>
+        </div>
+
+        <div class="main-widget">
+            <div class="widget-header">
+                <div class="widget-title">
+                    <i class="fas fa-trophy"></i>
+                    Live Football Scores
+                </div>
+                <div class="live-badge">
+                    <i class="fas fa-circle"></i>
+                    Live
+                </div>
+            </div>
+            
+            <div class="loading-container" id="loading">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Loading live football scores...</div>
+            </div>
+            
+            <!-- LIVESCORE WIDGET SOCCERSAPI.COM -->
+            <div id="ls-widget" data-w="w_default" class="livescore-widget"></div>
+            <script type="text/javascript" src="https://ls.soccersapi.com/widget/res/w_default/widget.js"></script>
+            <!-- LIVESCORE WIDGET SOCCERSAPI.COM -->
+        </div>
+
+        <div class="stats-section">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-value" id="current-time">--:--</div>
+                <div class="stat-label">Match Time</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="stat-value" id="current-date">Loading...</div>
+                <div class="stat-label">Today</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-fire"></i>
+                </div>
+                <div class="stat-value">24/7</div>
+                <div class="stat-label">Live Coverage</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-globe-americas"></i>
+                </div>
+                <div class="stat-value">200+</div>
+                <div class="stat-label">Leagues</div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <i class="fas fa-futbol"></i>
+                FootballCentral
+            </div>
+            <p class="footer-text">
+                &copy; 2025 FootballCentral - The Ultimate Football Experience. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Theme management
+        function toggleTheme() {
+            const body = document.body;
+            const themeText = document.getElementById('theme-text');
+            const themeIcon = document.querySelector('.control-btn i.fa-moon, .control-btn i.fa-sun');
+            
+            body.classList.toggle('dark-theme');
+            
+            if (body.classList.contains('dark-theme')) {
+                themeText.textContent = 'Light';
+                themeIcon.className = 'fas fa-sun';
+                localStorage.setItem('footballcentral-theme', 'dark');
+            } else {
+                themeText.textContent = 'Dark';
+                themeIcon.className = 'fas fa-moon';
+                localStorage.setItem('footballcentral-theme', 'light');
+            }
+        }
+
+        // Load saved theme
+        function loadSavedTheme() {
+            const savedTheme = localStorage.getItem('footballcentral-theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+                document.getElementById('theme-text').textContent = 'Light';
+                document.querySelector('.control-btn i').className = 'fas fa-sun';
+            }
+        }
+
+        // Refresh scores with animation
+        function refreshScores() {
+            const refreshBtn = document.querySelector('.control-btn');
+            const icon = refreshBtn.querySelector('i');
+            
+            icon.style.animation = 'spin 1s linear infinite';
+            refreshBtn.style.background = 'linear-gradient(45deg, #ff9800, #ffc107)';
+            
+            setTimeout(() => {
+                icon.style.animation = '';
+                refreshBtn.style.background = 'linear-gradient(45deg, #4caf50, #66bb6a)';
+                
+                // Add success feedback
+                const originalText = refreshBtn.querySelector('span') || refreshBtn.lastChild;
+                const originalContent = originalText.textContent;
+                originalText.textContent = 'Updated!';
+                
+                setTimeout(() => {
+                    originalText.textContent = originalContent;
+                }, 1500);
+            }, 1200);
+        }
+
+        // Update date and time
+        function updateDateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], {
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: false
+            });
+            const dateString = now.toLocaleDateString('en-US', { 
+                weekday: 'short',
+                month: 'short', 
+                day: 'numeric'
+            });
+            
+            document.getElementById('current-time').textContent = timeString;
+            document.getElementById('current-date').textContent = dateString;
+        }
+
+        // Hide loading animation
+        function hideLoadingAnimation() {
+            const loading = document.getElementById('loading');
+            setTimeout(() => {
+                loading.style.opacity = '0';
+                loading.style.transform = 'scale(0.8)';
+                setTimeout(() => {
+                    loading.style.display = 'none';
+                }, 300);
+            }, 2500);
+        }
+
+        // Add interactive hover effects
+        function addInteractiveEffects() {
+            // Add ripple effect to buttons
+            document.querySelectorAll('.control-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    const ripple = document.createElement('span');
+                    const rect = this.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    const x = e.clientX - rect.left - size / 2;
+                    const y = e.clientY - rect.top - size / 2;
+                    
+                    ripple.style.cssText = `
+                        position: absolute;
+                        width: ${size}px;
+                        height: ${size}px;
+                        left: ${x}px;
+                        top: ${y}px;
+                        background: rgba(255, 255, 255, 0.3);
+                        border-radius: 50%;
+                        transform: scale(0);
+                        animation: ripple 0.6s ease-out;
+                        pointer-events: none;
+                    `;
+                    
+                    this.appendChild(ripple);
+                    setTimeout(() => ripple.remove(), 600);
+                });
+            });
+
+            // Add CSS for ripple animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes ripple {
+                    to {
+                        transform: scale(2);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSavedTheme();
+            updateDateTime();
+            hideLoadingAnimation();
+            addInteractiveEffects();
+            
+            // Update time every 30 seconds
+            setInterval(updateDateTime, 30000);
+            
+            // Add performance optimization
+            if ('IntersectionObserver' in window) {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.style.animationPlayState = 'running';
+                        }
+                    });
+                });
+                
+                document.querySelectorAll('.stat-card').forEach(card => {
+                    observer.observe(card);
+                });
+            }
+        });
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'r':
+                        e.preventDefault();
+                        refreshScores();
+                        break;
+                    case 'd':
+                        e.preventDefault();
+                        toggleTheme();
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
 </html>
